@@ -137,7 +137,7 @@ set_disk_as_volumes() {
 }
 
 format_disks() {
-  /usr/local/disk_mount.sh
+  mkdir /hadoopfs/fs
 }
 
 main() {
