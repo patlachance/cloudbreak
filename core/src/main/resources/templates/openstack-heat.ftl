@@ -23,38 +23,17 @@ parameters:
   public_net_id:
     type: string
     description: The ID of the public network. You will need to replace it with your DevStack public network ID
+  app_network_id:
+      type: string
+      description: Fixed network id
+      default: f331c0e3-435f-42d7-8b9f-8d2bb70ae091
+  app_subnet_id:
+    type: string
+    description: Fixed subnet id
+    default: ad8f7655-bed4-4356-b0ed-3f89c19157b4
 
 resources:
 
-  app_network:
-      type: OS::Neutron::Net
-      properties:
-        admin_state_up: true
-        name: app_network
-        shared: true
-        tenant_id: { get_param: tenant_id }
-
-  app_subnet:
-      type: OS::Neutron::Subnet
-      properties:
-        network_id: { get_resource: app_network }
-        cidr: { get_param: app_net_cidr } 
-
-  router:
-      type: OS::Neutron::Router
-
-  router_gateway:
-      type: OS::Neutron::RouterGateway
-      properties:
-        router_id: { get_resource: router }
-        network_id: { get_param: public_net_id }
-
-  router_interface:
-      type: OS::Neutron::RouterInterface
-      properties:
-        router_id: { get_resource: router }
-        subnet_id: { get_resource: app_subnet }
-        
   <#list agents as agent>
   <#assign metadata = agent.metadata?eval>
   <#assign instance_id = metadata.cb_instance_group_name?replace('_', '') + "_" + metadata.cb_instance_private_id>
@@ -73,7 +52,6 @@ resources:
       metadata: ${agent.metadata}
       networks:
         - port: { get_resource: ambari_app_port_${instance_id} }
-      user_data_format: RAW
       user_data:
         str_replace:
           template: |
@@ -84,62 +62,12 @@ ${userdata}
   ambari_app_port_${instance_id}:
       type: OS::Neutron::Port
       properties:
-        network_id: { get_resource: app_network }
-        replacement_policy: AUTO
+        network_id: { get_param: app_network_id }
         fixed_ips:
-          - subnet_id: { get_resource: app_subnet }
-        security_groups: [ { get_resource: server_security_group } ]
-        
-<#list agent.volumes as volume>
+          - subnet_id: { get_param: app_subnet_id }
 
-  ambari_volume_${instance_id}_${volume_index}:
-    type: OS::Cinder::Volume
-    properties:
-      name: hdfs-volume
-      size: ${volume.size}
-      volume_type: lvmdriver-1
-
-  ambari_volume_attach_${instance_id}_${volume_index}:
-    type: OS::Cinder::VolumeAttachment
-    properties:
-      instance_uuid: { get_resource: ambari_${instance_id} }
-      mountpoint: ${volume.device}
-      volume_id: { get_resource: ambari_volume_${instance_id}_${volume_index} }
   </#list>
 
-  ambari_server_floatingip_${instance_id}:
-    type: OS::Neutron::FloatingIP
-    properties:
-      floating_network_id: { get_param: public_net_id }
-      port_id: { get_resource: ambari_app_port_${instance_id} }
-  
-  </#list>     
-
-  server_security_group:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      description: Cloudbreak security group
-      name: cb-sec-group
-      rules: [
-        <#list subnets as s>
-        <#list ports as p>
-        {remote_ip_prefix: ${s.cidr},
-        protocol: ${p.protocol},
-        port_range_min: ${p.localPort},
-        port_range_max: ${p.localPort}},
-        </#list>
-        </#list>
-        {remote_ip_prefix: ${cbSubnet},
-        protocol: tcp,
-        port_range_min: 1,
-        port_range_max: 65535},
-        {remote_ip_prefix: ${cbSubnet},
-        protocol: udp,
-        port_range_min: 1,
-        port_range_max: 65535},
-        {remote_ip_prefix: ${cbSubnet},
-        protocol: icmp}]
-        
 outputs:
   <#list agents as agent>
   <#assign m = agent.metadata?eval>

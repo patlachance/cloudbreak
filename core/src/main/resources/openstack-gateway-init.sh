@@ -21,7 +21,7 @@ configure_docker() {
 }
 
 format_disks() {
-  /usr/local/disk_mount.sh
+  mkdir /hadoopfs/fs
 }
 
 main() {

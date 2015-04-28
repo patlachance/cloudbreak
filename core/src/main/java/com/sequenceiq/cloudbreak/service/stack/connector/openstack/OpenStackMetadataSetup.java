@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openstack4j.api.OSClient;
+import org.openstack4j.model.compute.Address;
 import org.openstack4j.model.compute.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +38,33 @@ public class OpenStackMetadataSetup implements MetadataSetup {
         Resource heatResource = stack.getResourceByType(ResourceType.HEAT_STACK);
         String heatStackId = heatResource.getResourceName();
         Set<CoreInstanceMetaData> instancesCoreMetadata = new HashSet<>();
-        org.openstack4j.model.heat.Stack heatStack = osClient.heat().stacks().getDetails(stack.getName(), heatStackId);
-        List<Map<String, Object>> outputs = heatStack.getOutputs();
-        for (Map<String, Object> map : outputs) {
-            String instanceUUID = (String) map.get("output_value");
-            Server server = osClient.compute().servers().get(instanceUUID);
-            Map<String, String> metadata = server.getMetadata();
-            String instanceGroupName = metadata.get(HeatTemplateBuilder.CB_INSTANCE_GROUP_NAME);
-            instancesCoreMetadata.add(createCoreMetaData(stack, server, instanceGroupName, openStackUtil.getInstanceId(instanceUUID, metadata)));
+
+        List<? extends org.openstack4j.model.heat.Resource> resources = osClient.heat().resources().list(stack.getName(), heatStackId);
+        for (org.openstack4j.model.heat.Resource resource : resources) {
+            LOGGER.info("Resource: {}", resource);
+            LOGGER.info("Type: {}", resource.getType());
+            String resourceId = resource.getPhysicalResourceId();
+            LOGGER.info("ResourceID: {}", resourceId);
+            if (resource.getType().contains("Server") || resource.getType().contains("server")) {
+                Server server = osClient.compute().servers().get(resourceId);
+
+                // Getting a private IP for any network
+                String privateIp = null;
+                Map<String, List<? extends Address>> adrMap = server.getAddresses().getAddresses();
+                for (List<? extends Address> adrList : adrMap.values()) {
+                    //just pick a private IP don't care which one if it has multiple IPs
+                    privateIp = adrList.get(0).getAddr();
+                }
+
+                instancesCoreMetadata.add(new CoreInstanceMetaData(
+                        resourceId,
+                        privateIp,
+                        privateIp,
+                        server.getOsExtendedVolumesAttached().size(),
+                        stack.getInstanceGroupByInstanceGroupName(server.getMetadata().get(HeatTemplateBuilder.CB_INSTANCE_GROUP_NAME))
+                ));
+
+            }
         }
         return instancesCoreMetadata;
     }
