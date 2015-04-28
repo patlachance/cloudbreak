@@ -52,7 +52,7 @@ public class OpenStackConnector implements CloudPlatformConnector {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenStackConnector.class);
     private static final int POLLING_INTERVAL = 5000;
     private static final int MAX_POLLING_ATTEMPTS = 100;
-    private static final long OPERATION_TIMEOUT = 5L;
+    private static final long OPERATION_TIMEOUT = 60L;
 
     @Autowired
     private OpenStackUtil openStackUtil;
