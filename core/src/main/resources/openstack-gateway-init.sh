@@ -44,9 +44,19 @@ consul_join_ip() {
 }
 
 start_consul() {
+  local consulConfig=/usr/local/consul_dns.json
   get_consul_opts
   docker rm -f consul &> /dev/null
-  docker run -d --name consul --net=host --restart=always $CONSUL_IMAGE $CONSUL_OPTIONS
+  cat>$consulConfig<<EOF
+{
+  "dns_config": {
+    "node_ttl": "30s",
+    "max_stale": "15s",
+    "allow_stale": true
+  }
+}
+EOF
+  docker run -d --name consul --net=host --restart=always -v $consulConfig:/config/consul_dns.json $CONSUL_IMAGE $CONSUL_OPTIONS
 }
 
 get_consul_opts() {
