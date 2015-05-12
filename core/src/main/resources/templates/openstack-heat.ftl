@@ -26,11 +26,11 @@ parameters:
   app_network_id:
       type: string
       description: Fixed network id
-      default: f331c0e3-435f-42d7-8b9f-8d2bb70ae091
+      default: d6a01b5a-62a5-4151-88f0-718b575b680b
   app_subnet_id:
     type: string
     description: Fixed subnet id
-    default: ad8f7655-bed4-4356-b0ed-3f89c19157b4
+    default: 5993425e-8060-4288-877c-1e655a1d3552
 
 resources:
 
