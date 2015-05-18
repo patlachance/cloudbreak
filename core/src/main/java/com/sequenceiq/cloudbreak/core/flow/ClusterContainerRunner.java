@@ -5,6 +5,8 @@ import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONT
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_AMBARI_DB;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_DOCKER_CONSUL_WATCH_PLUGN;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_REGISTRATOR;
+import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_BAYWATCH_CLIENT;
+import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_BAYWATCH_SERVER;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -47,6 +49,12 @@ public class ClusterContainerRunner {
     @Value("${cb.docker.container.ambari.db:" + CB_DOCKER_CONTAINER_AMBARI_DB + "}")
     private String postgresDockerImageName;
 
+    @Value("${cb.docker.container.baywatch.server:" + CB_DOCKER_CONTAINER_BAYWATCH_SERVER + "}")
+    private String baywatchServerDockerImageName;
+
+    @Value("${cb.docker.container.baywatch.client:" + CB_DOCKER_CONTAINER_BAYWATCH_CLIENT + "}")
+    private String baywatchClientDockerImageName;
+
     @Autowired
     private StackRepository stackRepository;
 
@@ -76,6 +84,8 @@ public class ClusterContainerRunner {
             containerOrchestrator.startAmbariServer(cluster, postgresDockerImageName, ambariDockerImageName, cloudPlatform);
             containerOrchestrator.startAmbariAgents(cluster, ambariDockerImageName, cluster.getNodes().size() - 1, cloudPlatform);
             containerOrchestrator.startConsulWatches(cluster, consulWatchPlugnDockerImageName, cluster.getNodes().size());
+            containerOrchestrator.startBaywatchServer(cluster, baywatchServerDockerImageName);
+            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName, cluster.getNodes().size());
         } catch (CloudbreakOrchestratorException e) {
             throw new CloudbreakException(e);
         }
@@ -104,6 +114,7 @@ public class ClusterContainerRunner {
             ContainerOrchestratorCluster cluster = new ContainerOrchestratorCluster(gatewayInstance.getPublicIp(), nodes);
             containerOrchestrator.startAmbariAgents(cluster, ambariDockerImageName, cluster.getNodes().size(), cloudPlatform);
             containerOrchestrator.startConsulWatches(cluster, consulWatchPlugnDockerImageName, cluster.getNodes().size());
+            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName, cluster.getNodes().size());
         } catch (CloudbreakOrchestratorException e) {
             throw new CloudbreakException(e);
         }
