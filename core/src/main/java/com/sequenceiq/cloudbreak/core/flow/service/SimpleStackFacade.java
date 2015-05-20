@@ -139,7 +139,7 @@ public class SimpleStackFacade implements StackFacade {
         } catch (Exception ex) {
             LOGGER.error("Stack rollback failed on stack id : {}. Exception:", provisioningContext.getStackId(), ex);
             stackUpdater.updateStackStatus(provisioningContext.getStackId(), Status.CREATE_FAILED, "Rollback failed: " + ex.getMessage());
-            throw new CloudbreakException(String.format("Stack rollback failed on {} stack: ", provisioningContext.getStackId(), ex));
+            throw new CloudbreakException(ex);
         }
     }
 
