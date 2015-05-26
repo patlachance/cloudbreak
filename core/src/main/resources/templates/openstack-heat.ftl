@@ -21,38 +21,17 @@ parameters:
   public_net_id:
     type: string
     description: The ID of the public network. You will need to replace it with your DevStack public network ID
+  app_network_id:
+      type: string
+      description: Fixed network id
+      default: 0c93f7df-92fe-4906-b53d-ef0b7472a4ed
+  app_subnet_id:
+    type: string
+    description: Fixed subnet id
+    default: 243d421c-81c1-42e8-ba31-c287041ee81e
 
 resources:
 
-  app_network:
-      type: OS::Neutron::Net
-      properties:
-        admin_state_up: true
-        name: app_network
-        shared: true
-        tenant_id: { get_param: tenant_id }
-
-  app_subnet:
-      type: OS::Neutron::Subnet
-      properties:
-        network_id: { get_resource: app_network }
-        cidr: { get_param: app_net_cidr } 
-
-  router:
-      type: OS::Neutron::Router
-
-  router_gateway:
-      type: OS::Neutron::RouterGateway
-      properties:
-        router_id: { get_resource: router }
-        network_id: { get_param: public_net_id }
-
-  router_interface:
-      type: OS::Neutron::RouterInterface
-      properties:
-        router_id: { get_resource: router }
-        subnet_id: { get_resource: app_subnet }
-        
   gw_user_data_config:
       type: OS::Heat::SoftwareConfig
       properties:
@@ -88,13 +67,14 @@ ${core_user_data}
   ambari_app_port_${instance_id}:
       type: OS::Neutron::Port
       properties:
-        network_id: { get_resource: app_network }
+        network_id: { get_param: app_network_id }
         replacement_policy: AUTO
         fixed_ips:
-          - subnet_id: { get_resource: app_subnet }
+          - subnet_id: { get_param: app_subnet_id }
         security_groups: [ { get_resource: server_security_group } ]
         
-<#list agent.volumes as volume>
+
+  <#list agent.volumes as volume>
 
   ambari_volume_${instance_id}_${volume_index}:
     type: OS::Cinder::Volume
@@ -110,13 +90,14 @@ ${core_user_data}
       volume_id: { get_resource: ambari_volume_${instance_id}_${volume_index} }
   </#list>
 
-  ambari_server_floatingip_${instance_id}:
-    type: OS::Neutron::FloatingIP
-    properties:
-      floating_network_id: { get_param: public_net_id }
-      port_id: { get_resource: ambari_app_port_${instance_id} }
-  
-  </#list>     
+  </#list>
+
+  ambari_floating_cbgateway_0:
+      type: OS::Neutron::FloatingIP
+      properties:
+        floating_network_id: { get_param: public_net_id }
+        port_id: { get_resource: ambari_app_port_cbgateway_0 }
+
 
   server_security_group:
     type: OS::Neutron::SecurityGroup
