@@ -12,7 +12,8 @@ public interface ContainerOrchestrator {
     void startAmbariAgents(ContainerOrchestratorCluster cluster, String imageName, int count, String platform) throws CloudbreakOrchestratorException;
     void startConsulWatches(ContainerOrchestratorCluster cluster, String imageName, int count) throws CloudbreakOrchestratorException;
     void startBaywatchServer(ContainerOrchestratorCluster cluster, String imageName) throws CloudbreakOrchestratorException;
-    void startBaywatchClients(ContainerOrchestratorCluster cluster, String imageName, int count) throws CloudbreakOrchestratorException;
+    void startBaywatchClients(ContainerOrchestratorCluster cluster, String imageName,
+            int count, String consulDomain, String externServerLocation) throws CloudbreakOrchestratorException;
 
     boolean areAllNodesAvailable(String gatewayAddress, Set<Node> nodes);
     boolean isBootstrapApiAvailable(String gatewayAddress);

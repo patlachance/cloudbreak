@@ -1,12 +1,13 @@
 package com.sequenceiq.cloudbreak.core.flow;
 
+import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_BAYWATCH_EXTERN_LOCATION;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_CONTAINER_ORCHESTRATOR;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_AMBARI;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_AMBARI_DB;
-import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_DOCKER_CONSUL_WATCH_PLUGN;
-import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_REGISTRATOR;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_BAYWATCH_CLIENT;
 import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_BAYWATCH_SERVER;
+import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_DOCKER_CONSUL_WATCH_PLUGN;
+import static com.sequenceiq.cloudbreak.EnvironmentVariableConfig.CB_DOCKER_CONTAINER_REGISTRATOR;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,7 @@ import com.sequenceiq.cloudbreak.orchestrator.ContainerOrchestratorCluster;
 import com.sequenceiq.cloudbreak.orchestrator.ContainerOrchestratorTool;
 import com.sequenceiq.cloudbreak.orchestrator.Node;
 import com.sequenceiq.cloudbreak.repository.StackRepository;
+import com.sequenceiq.cloudbreak.service.stack.flow.ConsulUtils;
 
 @Component
 public class ClusterContainerRunner {
@@ -54,6 +57,9 @@ public class ClusterContainerRunner {
 
     @Value("${cb.docker.container.baywatch.client:" + CB_DOCKER_CONTAINER_BAYWATCH_CLIENT + "}")
     private String baywatchClientDockerImageName;
+
+    @Value("${cb.baywatch.extern.location:" + CB_BAYWATCH_EXTERN_LOCATION + "}")
+    private String baywatchServerExternLocation;
 
     @Autowired
     private StackRepository stackRepository;
@@ -84,8 +90,11 @@ public class ClusterContainerRunner {
             containerOrchestrator.startAmbariServer(cluster, postgresDockerImageName, ambariDockerImageName, cloudPlatform);
             containerOrchestrator.startAmbariAgents(cluster, ambariDockerImageName, cluster.getNodes().size() - 1, cloudPlatform);
             containerOrchestrator.startConsulWatches(cluster, consulWatchPlugnDockerImageName, cluster.getNodes().size());
-            containerOrchestrator.startBaywatchServer(cluster, baywatchServerDockerImageName);
-            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName, cluster.getNodes().size());
+            if (StringUtils.isEmpty(baywatchServerExternLocation)) {
+                containerOrchestrator.startBaywatchServer(cluster, baywatchServerDockerImageName);
+            }
+            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName,
+                    cluster.getNodes().size(), ConsulUtils.CONSUL_DOMAIN, baywatchServerExternLocation);
         } catch (CloudbreakOrchestratorException e) {
             throw new CloudbreakException(e);
         }
@@ -114,7 +123,8 @@ public class ClusterContainerRunner {
             ContainerOrchestratorCluster cluster = new ContainerOrchestratorCluster(gatewayInstance.getPublicIp(), nodes);
             containerOrchestrator.startAmbariAgents(cluster, ambariDockerImageName, cluster.getNodes().size(), cloudPlatform);
             containerOrchestrator.startConsulWatches(cluster, consulWatchPlugnDockerImageName, cluster.getNodes().size());
-            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName, cluster.getNodes().size());
+            containerOrchestrator.startBaywatchClients(cluster, baywatchClientDockerImageName, cluster.getNodes().size(),
+                    ConsulUtils.CONSUL_DOMAIN, baywatchServerExternLocation);
         } catch (CloudbreakOrchestratorException e) {
             throw new CloudbreakException(e);
         }

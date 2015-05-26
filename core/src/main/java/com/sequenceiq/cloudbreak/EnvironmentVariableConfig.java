@@ -45,10 +45,13 @@ public class EnvironmentVariableConfig {
     public static final String CB_DOCKER_CONTAINER_BAYWATCH_SERVER = "sequenceiq/baywatch";
     public static final String CB_DOCKER_CONTAINER_BAYWATCH_CLIENT = "sequenceiq/baywatch-client";
 
+    public static final String CB_BAYWATCH_EXTERN_LOCATION = "";
+
     public static final String CB_AZURE_IMAGE_URI = "https://102589fae040d8westeurope.blob.core.windows.net/images/packer-cloudbreak-2015-05-15-centos6_2015-May-15_12-38-os-2015-05-15.vhd";
     public static final String CB_AWS_AMI_MAP = "ap-northeast-1:ami-cad318ca,ap-southeast-1:ami-d4dfe186,ap-southeast-2:ami-9d146aa7,eu-west-1:ami-4384f134,sa-east-1:ami-6deb6d70,us-east-1:ami-16f7ea7e,us-west-1:ami-67aa4323,us-west-2:ami-69526059";
     public static final String CB_OPENSTACK_IMAGE = "cb-centos66-amb200-2015-05-15";
-    public static final String CB_GCP_SOURCE_IMAGE_PATH = "sequenceiqimage/cb-centos66-amb200-2015-05-15-1403.image.tar.gz";
+    //public static final String CB_GCP_SOURCE_IMAGE_PATH = "sequenceiqimage/cb-centos66-amb200-2015-05-15-1403.image.tar.gz";
+    public static final String CB_GCP_SOURCE_IMAGE_PATH = "packer-cloudbreak-2015-05-22-baywatch-test";
 
     public static final String CB_GCP_AND_AZURE_USER_NAME = "cloudbreak";
 

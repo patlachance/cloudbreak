@@ -41,7 +41,7 @@ public class SwarmContainerOrchestrator extends SimpleContainerOrchestrator {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwarmContainerOrchestrator.class);
     private static final int READ_TIMEOUT = 30000;
     private static final String MUNCHAUSEN_WAIT = "360";
-    private static final String MUNCHAUSEN_DOCKER_IMAGE = "sequenceiq/munchausen:0.3";
+    private static final String MUNCHAUSEN_DOCKER_IMAGE = "sequenceiq/munchausen:logging";
     private static final int MAX_IP_FOR_ONE_REQUEST = 600;
 
     public SwarmContainerOrchestrator(ParallelContainerRunner parallelContainerRunner) {
@@ -174,34 +174,37 @@ public class SwarmContainerOrchestrator extends SimpleContainerOrchestrator {
     @Override
     public void startBaywatchServer(ContainerOrchestratorCluster cluster, String imageName) throws CloudbreakOrchestratorException {
         try {
+            Node gateway = getGatewayNode(cluster.getApiAddress(), cluster.getNodes());
             DockerClient swarmManagerClient = DockerClientBuilder.getInstance(getSwarmClientConfig(cluster.getApiAddress()))
                     .withDockerCmdExecFactory(new DockerCmdExecFactoryImpl())
                     .build();
-            simpleContainerBootstrapRunner(new BaywatchServerBootstrap(swarmManagerClient, imageName)).call();
+            simpleContainerBootstrapRunner(new BaywatchServerBootstrap(swarmManagerClient, imageName, gateway.getHostname()), MDC.getCopyOfContextMap()).call();
         } catch (Exception e) {
             throw new CloudbreakOrchestratorException(e);
         }
     }
 
     @Override
-    public void startBaywatchClients(ContainerOrchestratorCluster cluster, String imageName, int count) throws CloudbreakOrchestratorException {
+    public void startBaywatchClients(ContainerOrchestratorCluster cluster, String imageName, int count, String consulDomain,
+            String externServerLocation) throws CloudbreakOrchestratorException {
         if (count > cluster.getNodes().size()) {
             throw new CloudbreakOrchestratorException("Cannot orchestrate more Baywatch client containers than the available nodes.");
         }
         try {
-            ExecutorService executor = Executors.newFixedThreadPool(TEN);
             List<Future<Boolean>> futures = new ArrayList<>();
             DockerClient swarmManagerClient = DockerClientBuilder.getInstance(getSwarmClientConfig(cluster.getApiAddress()))
                     .withDockerCmdExecFactory(new DockerCmdExecFactoryImpl())
                     .build();
             Set<Node> nodes = cluster.getNodes();
+            Node gateway = getGatewayNode(cluster.getApiAddress(), nodes);
             Iterator<Node> nodeIterator = nodes.iterator();
             for (int i = 0; i < count; i++) {
                 Node node = nodeIterator.next();
                 String time = String.valueOf(new Date().getTime()) + i;
-                BaywatchClientBootstrap baywatchClientBootstrap =
-                        new BaywatchClientBootstrap(swarmManagerClient, cluster.getApiAddress(), imageName, time, node);
-                futures.add(executor.submit(simpleContainerBootstrapRunner(baywatchClientBootstrap)));
+                BaywatchClientBootstrap runner =
+                        new BaywatchClientBootstrap(swarmManagerClient, gateway.getPrivateIp(), imageName, time, node,
+                                consulDomain, externServerLocation);
+                futures.add(getParallelContainerRunner().submit(simpleContainerBootstrapRunner(runner, MDC.getCopyOfContextMap())));
             }
             for (Future<Boolean> future : futures) {
                 future.get();

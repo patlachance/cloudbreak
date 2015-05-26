@@ -35,6 +35,8 @@ public final class NetworkUtils {
         ports.add(new Port("Zeppelin ui", "9998", "9998", "tcp", aclRules));
         ports.add(new Port("Docker api", "2376", "2376", "tcp", aclRules));
         ports.add(new Port("Swarm api", "3376", "3376", "tcp", aclRules));
+        ports.add(new Port("Kibana", "3080", "3080", "tcp", aclRules));
+        ports.add(new Port("Elastic Search", "9200", "9200", "tcp", aclRules));
         return ports;
     }
 
