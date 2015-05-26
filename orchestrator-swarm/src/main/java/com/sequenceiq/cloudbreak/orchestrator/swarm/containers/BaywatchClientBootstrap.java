@@ -2,7 +2,6 @@ package com.sequenceiq.cloudbreak.orchestrator.swarm.containers;
 
 import static com.sequenceiq.cloudbreak.orchestrator.DockerContainer.BAYWATCH_CLIENT;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +13,7 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import com.github.dockerjava.api.model.RestartPolicy;
 import com.github.dockerjava.api.model.Volume;
+import com.google.common.base.Strings;
 import com.sequenceiq.cloudbreak.orchestrator.Node;
 import com.sequenceiq.cloudbreak.orchestrator.containers.ContainerBootstrap;
 import com.sequenceiq.cloudbreak.orchestrator.swarm.DockerClientUtil;
@@ -23,8 +23,8 @@ public class BaywatchClientBootstrap implements ContainerBootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaywatchClientBootstrap.class);
     private static final int PORT = 49999;
     private static final String DOCKER_LOG_LOCATION = "/var/log/containers";
-    public static final String SINCEDB_LOCATION = "/sincedb";
-    public static final String LOCAL_SINCEDB_LOCATION = "/log-sincedb";
+    private static final String SINCEDB_LOCATION = "/sincedb";
+    private static final String LOCAL_SINCEDB_LOCATION = "/log-sincedb";
 
     private final DockerClient docker;
     private final String gatewayAddress;
@@ -53,7 +53,7 @@ public class BaywatchClientBootstrap implements ContainerBootstrap {
         hostConfig.setNetworkMode("host");
         hostConfig.setRestartPolicy(RestartPolicy.alwaysRestart());
         try {
-            String baywatchIp = StringUtils.isEmpty(externLocation) ? gatewayAddress : externLocation;
+            String baywatchIp = Strings.isNullOrEmpty(externLocation) ? gatewayAddress : externLocation;
             String containerId = DockerClientUtil.createContainer(docker, docker.createContainerCmd(imageName)
                     .withName(String.format("%s-%s", BAYWATCH_CLIENT.getName(), id))
                     .withEnv(String.format("constraint:node==%s", node.getHostname()),

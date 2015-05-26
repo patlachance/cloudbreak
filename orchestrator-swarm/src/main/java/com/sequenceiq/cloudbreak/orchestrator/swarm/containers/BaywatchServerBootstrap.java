@@ -19,9 +19,9 @@ import com.sequenceiq.cloudbreak.orchestrator.swarm.DockerClientUtil;
 
 public class BaywatchServerBootstrap implements ContainerBootstrap {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaywatchServerBootstrap.class);
-
     public static final String CLUSTER_NAME = "hdp-log-cluster";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaywatchServerBootstrap.class);
 
     private static final int ES_PORT = 9300;
     private static final int ES_TRANSPORT_PORT = 9200;
