@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    baseName = 'cloud-openstack'
+}
+
+dependencies {
+    compile "org.slf4j:slf4j-api:${slf4jApiVersion}"
+
+}
