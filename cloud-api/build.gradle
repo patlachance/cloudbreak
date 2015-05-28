@@ -12,7 +12,9 @@ jar {
 }
 
 dependencies {
-    compile "org.slf4j:slf4j-api:${slf4jApiVersion}"
 
+    compile project(':core-model')
+
+    compile "org.slf4j:slf4j-api:${slf4jApiVersion}"
 
 }
