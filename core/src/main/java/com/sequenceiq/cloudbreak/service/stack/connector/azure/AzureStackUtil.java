@@ -64,10 +64,13 @@ public class AzureStackUtil {
     private UserDetailsService userDetailsService;
 
     public String getOsImageName(Stack stack, AzureLocation location, int storageIndex) {
+        return getOsImageName(stack, getOSStorageName(stack, location, storageIndex));
+    }
+
+    public String getOsImageName(Stack stack, String storageName) {
         String[] split = stack.getImage().split("/");
         // TODO why do we need an IMAGE_NAME here?
-        return format("%s-%s-%s", getOSStorageName(stack, location, storageIndex), IMAGE_NAME,
-                split[split.length - 1].replaceAll(".vhd", ""));
+        return format("%s-%s-%s", storageName, IMAGE_NAME, split[split.length - 1].replaceAll(".vhd", ""));
     }
 
     public String getOSStorageName(Stack stack, AzureLocation location, int index) {
@@ -75,11 +78,16 @@ public class AzureStackUtil {
         return index == GLOBAL_STORAGE ? baseStorageName : baseStorageName + stack.getId() + index;
     }
 
+    /**
+     * Determines the number of required Storage Accounts to distribute the VHDs.
+     * In case of global Storage Account it returns -1.
+     */
     public int getNumOfStorageAccounts(Stack stack) {
         if (!stack.isBlobCountSpecified()) {
             return GLOBAL_STORAGE;
         }
         int vhdPerStorageAccount = getNumOfVHDPerStorageAccount(stack);
+        //TODO check existing storage accounts
         List<InstanceGroup> instanceGroups = getOrderedInstanceGroups(stack);
         int accounts[] = new int[4096];
         Arrays.fill(accounts, vhdPerStorageAccount);

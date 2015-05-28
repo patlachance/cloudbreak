@@ -1,8 +1,11 @@
 package com.sequenceiq.cloudbreak.service.stack.resource.azure.model;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.sequenceiq.cloudbreak.service.stack.resource.ProvisionContextObject;
 
@@ -48,12 +51,24 @@ public class AzureProvisionContextObject extends ProvisionContextObject {
 
     public synchronized int setAndGetStorageAccountIndex(int volumeCount) {
         for (int i = 0; i < vhdPerStorage.length; i++) {
-            int space = vhdPerStorage[i];
-            if (space >= volumeCount) {
-                vhdPerStorage[i] = space - volumeCount;
+            int headRoom = vhdPerStorage[i];
+            if (headRoom >= volumeCount) {
+                vhdPerStorage[i] = headRoom - volumeCount;
                 return i;
             }
         }
-        return -1;
+        return overbook(volumeCount);
+    }
+
+    public synchronized int overbook(int volumeCount) {
+        int max = Collections.max(Arrays.asList(ArrayUtils.toObject(vhdPerStorage)));
+        for (int i = 0; i < vhdPerStorage.length; i++) {
+            int headRoom = vhdPerStorage[i];
+            if (headRoom == max) {
+                vhdPerStorage[i] = headRoom - volumeCount;
+                return i;
+            }
+        }
+        return 0;
     }
 }
