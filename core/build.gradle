@@ -58,6 +58,8 @@ dependencies {
     compile ("com.sequenceiq:azure-rest-client:${azureRestClientVersion}")                                          { exclude group: 'log4j' }
     compile (group: 'com.amazonaws',                name: 'aws-java-sdk',                   version: '1.9.35')      { exclude group: 'commons-logging' }
 
+    compile project(':core-model')
+
     runtime project(':orchestrator-swarm')
     compile project(':orchestrator-api')
 

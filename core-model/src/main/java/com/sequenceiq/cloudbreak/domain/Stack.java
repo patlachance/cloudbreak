@@ -410,7 +410,7 @@ public class Stack implements ProvisionEntity {
     }
 
     public boolean isStackInDeletionPhase() {
-        return status.equals(Status.DELETE_COMPLETED) || status.equals(Status.DELETE_IN_PROGRESS);
+        return status.equals(DELETE_COMPLETED) || status.equals(DELETE_IN_PROGRESS);
     }
 
     public Boolean isCloudPlatformUsedWithTemplate() {
