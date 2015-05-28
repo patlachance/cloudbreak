@@ -176,8 +176,7 @@ public class AmbariClusterService implements ClusterService {
                     collectDownscaleCandidates(hostGroupAdjustment, stack, cluster, decommissionRequest),
                     decommissionRequest, stack.cloudPlatform(),
                     hostGroupAdjustment.getWithStackUpdate() ? ScalingType.DOWNSCALE_TOGETHER : ScalingType.DOWNSCALE_ONLY_CLUSTER);
-            cluster.setStatus(UPDATE_REQUESTED);
-            clusterRepository.save(cluster);
+            updateClusterStatusByStackId(stackId, UPDATE_REQUESTED);
             flowManager.triggerClusterDownscale(updateRequest);
         } else {
             updateRequest = new UpdateAmbariHostsRequest(stackId, hostGroupAdjustment,
@@ -223,8 +222,7 @@ public class AmbariClusterService implements ClusterService {
                         String.format("Cannot update the status of cluster '%s' to STARTED, because the stack is not AVAILABLE", clusterId));
             }
             if (cluster.isAvailable()) {
-                cluster.setStatus(STOP_REQUESTED);
-                clusterRepository.save(cluster);
+                updateClusterStatusByStackId(stackId, STOP_REQUESTED);
                 retVal = new ClusterStatusUpdateRequest(stack.getId(), statusRequest, stack.cloudPlatform());
                 flowManager.triggerClusterStop(retVal);
             }
@@ -241,6 +239,11 @@ public class AmbariClusterService implements ClusterService {
         cluster.setStatusReason(statusReason);
         cluster = clusterRepository.save(cluster);
         return cluster;
+    }
+
+    @Override
+    public Cluster updateClusterStatusByStackId(Long stackId, Status status) {
+        return updateClusterStatusByStackId(stackId, status, "");
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.sequenceiq.cloudbreak.service.stack;
 
 import static com.sequenceiq.cloudbreak.domain.InstanceGroupType.isGateway;
 import static com.sequenceiq.cloudbreak.domain.Status.START_REQUESTED;
+import static com.sequenceiq.cloudbreak.domain.Status.STOP_REQUESTED;
 import static com.sequenceiq.cloudbreak.domain.Status.UPDATE_REQUESTED;
 import static com.sequenceiq.cloudbreak.domain.StatusRequest.STARTED;
 
@@ -196,6 +197,7 @@ public class DefaultStackService implements StackService {
                     throw new BadRequestException(
                             String.format("Cannot update the status of stack '%s' to STOPPED, because the cluster is not in STOPPED state.", stackId));
                 }
+                stackUpdater.updateStackStatus(stackId, STOP_REQUESTED);
                 flowManager.triggerStackStop(new StackStatusUpdateRequest(stack.cloudPlatform(), stack.getId(), status));
             }
         }

@@ -30,6 +30,8 @@ public interface ClusterService {
 
     Cluster updateClusterStatusByStackId(Long stackId, Status status, String statusReason);
 
+    Cluster updateClusterStatusByStackId(Long stackId, Status status);
+
     Cluster updateCluster(Cluster cluster);
 
     Cluster recreate(Long stackId, Long blueprintId, Set<HostGroup> hostGroups, boolean validateBlueprint, AmbariStackDetails ambariStackDetails);
